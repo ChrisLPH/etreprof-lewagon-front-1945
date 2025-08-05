@@ -4,14 +4,6 @@ import requests
 
 API_BASE_URL = st.secrets["api"]["API_URL"]
 
-# API connection test
-api_status = call_api("/")
-if api_status:
-    st.success(f"API connected: {api_status.get('status', 'running')}")
-else:
-    st.error("Cannot connect to API")
-    st.stop()
-
 st.header("Content Classification")
 st.markdown("Analyze markdown content to identify themes and priority challenges.")
 
@@ -116,3 +108,11 @@ elif analyze_btn:
 
 # elif analyze_btn:
 #     st.warning("Please enter content to analyze")
+
+# API connection test
+api_status = call_api("/")
+if api_status:
+    st.success(f"API connected: {api_status.get('status', 'running')}")
+else:
+    st.error("Cannot connect to API")
+    st.stop()

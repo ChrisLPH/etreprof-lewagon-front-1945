@@ -5,14 +5,6 @@ import plotly.graph_objects as go
 import pandas as pd
 from datetime import datetime, timedelta
 
-# API connection test
-api_status = call_api("/")
-if api_status:
-    st.success(f"API connected: {api_status.get('status', 'running')}")
-else:
-    st.error("Cannot connect to API")
-    st.stop()
-
 st.header("🔍 User Analytics - Team Dashboard")
 st.markdown("Deep dive into user behavior patterns, engagement metrics, and detailed profiling for team analysis.")
 
@@ -483,3 +475,11 @@ with st.expander("🔧 Team Analytics Guide", expanded=False):
 
     **Privacy Note:** This detailed view is for internal team use only.
     """)
+
+
+api_status = call_api("/")
+if api_status:
+    st.success(f"API connected: {api_status.get('status', 'running')}")
+else:
+    st.error("Cannot connect to API")
+    st.stop()

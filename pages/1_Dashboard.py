@@ -1,17 +1,7 @@
 import streamlit as st
 from utils import call_api
 
-# API connection test
-api_status = call_api("/")
-if api_status:
-    st.success(f"API connected: {api_status.get('status', 'running')}")
-else:
-    st.error("Cannot connect to API")
-    st.stop()
-
-st.set_page_config(
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Team Recommendations", page_icon="📬", layout="wide")
 
 st.header("Team dashboard")
 
@@ -43,3 +33,15 @@ with col3:
 with st.expander("User Analytics", expanded=True):
     if st.button("📈 User Analytics", key="analytics_btn"):
         st.switch_page("pages/5_User_Analytics.py")
+
+# API connection test
+api_status = call_api("/")
+if api_status:
+    st.success(f"API connected: {api_status.get('status', 'running')}")
+else:
+    st.error("Cannot connect to API")
+    st.stop()
+
+st.set_page_config(
+    initial_sidebar_state="expanded"
+)

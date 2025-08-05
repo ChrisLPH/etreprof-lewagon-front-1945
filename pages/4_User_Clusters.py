@@ -4,12 +4,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 # API connection test
-api_status = call_api("/")
-if api_status:
-    st.success(f"API connected: {api_status.get('status', 'running')}")
-else:
-    st.error("Cannot connect to API")
-    st.stop()
 
 st.header("User Clusters")
 st.markdown("5 behavioral clusters visualization and real-time recomputing")
@@ -119,3 +113,10 @@ if clusters_data and clusters_data.get("success"):
                         st.metric(f"Cluster {i}", f"{count:,}")
 
                 st.rerun()
+
+api_status = call_api("/")
+if api_status:
+    st.success(f"API connected: {api_status.get('status', 'running')}")
+else:
+    st.error("Cannot connect to API")
+    st.stop()
