@@ -57,11 +57,9 @@ if analyze_btn and markdown_content:
 
                     st.success("Analysis completed")
 
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        st.metric("Main Theme", data["theme"])
-                    with col2:
-                        st.metric("Priority Challenge", data["defi"])
+                    topic_principal = data["topic_principal"]
+                    st.metric("Main Topic", topic_principal["label"])
+                    st.metric("Confidence", f"{topic_principal['confidence']}%")
 
                     st.markdown("### Detailed Results")
                     st.json(data)
