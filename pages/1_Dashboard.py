@@ -9,6 +9,10 @@ else:
     st.error("Cannot connect to API")
     st.stop()
 
+st.set_page_config(
+    initial_sidebar_state="expanded"
+)
+
 st.header("Team dashboard")
 
 st.markdown("""

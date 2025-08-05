@@ -12,7 +12,7 @@ else:
     st.stop()
 
 st.header("User Clusters")
-st.markdown("4 behavioral clusters visualization and real-time recomputing")
+st.markdown("5 behavioral clusters visualization and real-time recomputing")
 
 clusters_data = call_api("/clusters")
 
@@ -23,7 +23,7 @@ if clusters_data and clusters_data.get("success"):
 
     cluster_names = []
     cluster_counts = []
-    cluster_colors = ['#5f2ec8', '#ffc373', '#45B7D1', '#96CEB4']
+    cluster_colors = ['#5f2ec8', '#ffc373', '#45B7D1', '#96CEB4', '#FF6B6B']
 
     cols = st.columns(4)
     for i, (cluster_id, cluster_info) in enumerate(clusters.items()):

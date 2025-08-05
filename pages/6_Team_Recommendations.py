@@ -69,7 +69,7 @@ if st.button("🎯 Show Recommendations", key="show_btn"):
 if st.button("📊 View All Clusters"):
     st.markdown("## 🔄 Overview of all recommendation strategies")
 
-    for cid in range(4):
+    for cid in range(5):
         response = call_api(f"/recommend/{cid}")
         if response and response.get("success"):
             rec = response["recommendations"]

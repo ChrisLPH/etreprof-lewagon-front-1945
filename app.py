@@ -5,7 +5,7 @@ st.set_page_config(
     page_title="ÊtrePROF - AI-Powered Teacher Platform",
     page_icon="📚",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # CSS personnalisé
@@ -82,7 +82,7 @@ with st.expander("📖 About ÊtrePROF Project", expanded=False):
 
         st.metric("👩‍🏫 Teachers", "200,000+")
         st.metric("📚 Contents", "5,000+")
-        st.metric("🎯 ML Clusters", "4")
+        st.metric("🎯 ML Clusters", "5")
 
         st.metric("📊 Interactions", "16M+")
         st.metric("🏷️ Topics", "16")
@@ -107,7 +107,7 @@ with col1:
 
 with col2:
     if st.button("👥 Team Dashboard", key="team_btn"):
-        st.switch_page("pages/3_Classify_Content.py")
+        st.switch_page("pages/1_Dashboard.py")
     st.markdown("""
     **For ÊtrePROF Team**
     - Classify new content automatically
