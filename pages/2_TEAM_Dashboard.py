@@ -30,12 +30,6 @@ st.markdown("""
         margin-bottom: 1rem;
         height: 100%;
     }
-    .nav-button {
-        width: 100%;
-        height: 100px;
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
-    }
     .nav-icon {
         font-size: 2rem;
         margin-bottom: 0.5rem;
@@ -93,28 +87,28 @@ with col1:
     with st.container():
         st.markdown("#### 📋 Content Classification")
         st.markdown("Automatically classify content and identify themes.")
-        if st.button("Analyze Content", key="content_btn"):
+        if st.button("Analyze Content", key="content_btn", type="primary"):
             st.switch_page("pages/3_TEAM_Classify_Content.py")
 
 with col2:
     with st.container():
         st.markdown("#### 👥 Users Clusters")
         st.markdown("Analyze behavioral segments and understand user patterns.")
-        if st.button("Explore Clusters", key="clusters_btn"):
+        if st.button("Explore Clusters", key="clusters_btn", type="primary"):
             st.switch_page("pages/4_TEAM_User_Clusters.py")
 
 with col3:
     with st.container():
         st.markdown("#### 📊 User Analytics")
         st.markdown("Deep dive into user behavior and engagement metrics.")
-        if st.button("View Analytics", key="analytics_btn"):
+        if st.button("View Analytics", key="analytics_btn", type="primary"):
             st.switch_page("pages/5_TEAM_User_Analytics.py")
 
 with col4:
     with st.container():
         st.markdown("#### 📬 Recommendations")
         st.markdown("Generate personalized content recommendations for users.")
-        if st.button("View Recommendations", key="recommendations_btn"):
+        if st.button("View Recommendations", key="recommendations_btn", type="primary"):
             st.switch_page("pages/6_TEAM_Recommendations.py")
 
 st.divider()
