@@ -60,11 +60,11 @@ with col2:
     st.markdown("### Try an example")
     example_users = {
         "Select an example...": None,
-        "Marie (Primary Teacher)": 12345,
-        "Jean (Middle School)": 45678,
-        "Thomas (Trainer)": 78901,
-        "Emma (Elementary)": 91234,
-        "Alex (High School)": 94567
+        "Ben": 93697,
+        "Ido": 149692,
+        "Oksana": 59714,
+        "Kalindi": 24194,
+        "Florine": 72085
     }
 
     selected_example = st.selectbox(
