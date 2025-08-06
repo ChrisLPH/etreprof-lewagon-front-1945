@@ -73,7 +73,7 @@ with col1:
     - Discover resources matching your needs
     - Find content tailored to your teaching profile
     """)
-    if st.button("👤 Access User Experience", key="user_btn"):
+    if st.button("👤 Access User Experience", key="user_btn", type="primary"):
         st.switch_page("pages/1_USER_Recommendations.py")
 
 with col2:
@@ -84,7 +84,7 @@ with col2:
     - Classify content automatically
     - Generate personalized recommendations
     """)
-    if st.button("🔬 Access Team Dashboard", key="team_btn"):
+    if st.button("🔬 Access Team Dashboard", key="team_btn", type="primary"):
         st.switch_page("pages/2_TEAM_Dashboard.py")
 
 # Section "About ÊtrePROF"
