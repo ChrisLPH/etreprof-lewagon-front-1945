@@ -5,8 +5,49 @@ import plotly.graph_objects as go
 import pandas as pd
 from datetime import datetime, timedelta
 
-st.header("🔍 User Analytics - Team Dashboard")
+# Page configuration
+st.set_page_config(
+    page_title="ÊtrePROF - User Analytics",
+    page_icon="🔍",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# Custom CSS for consistent styling
+st.markdown("""
+<style>
+    .stApp {
+        background-color: #f4f8fe;
+    }
+
+    .metric-card {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+    .characteristic {
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border-radius: 3px;
+        background-color: rgba(240, 240, 240, 0.5);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Define cluster colors for consistency - SAME AS IN OTHER PAGES
+cluster_colors = ['#5f2ec8', '#ffc373', '#45B7D1', '#96CEB4', '#FF6B6B']
+
+# Header
+st.markdown("# 🔍 User Analytics - Team Dashboard")
 st.markdown("Deep dive into user behavior patterns, engagement metrics, and detailed profiling for team analysis.")
+
+# API connection test
+api_status = call_api("/")
+if not api_status:
+    st.error("❌ Cannot connect to API")
+    st.stop()
 
 # Load clusters for context
 clusters_data = call_api("/clusters")
@@ -21,7 +62,7 @@ with col1:
     user_id = st.number_input(
         "User ID to analyze:",
         min_value=1,
-        value=12345,
+        value=6000,
         step=1,
         help="Enter the user ID for detailed behavioral analysis"
     )
@@ -37,38 +78,46 @@ if analyze_btn:
         if profile_result and profile_result.get("success"):
             profile_data = profile_result["data"]
 
-            st.success(f"✅ User {user_id} - Analytics Loaded")
+            # Extract user information
+            user_profile = profile_data["profile"]
+            cluster_info = profile_data["cluster"]
+            cluster_id = int(cluster_info['id'])  # Ensure cluster_id is integer
+            recommendations = profile_data["recommendations"]
+
+            # Success header with user ID and cluster color
+            st.markdown(f"""
+            <div class="profile-header" style="border-left: 8px solid {cluster_colors[cluster_id]};">
+                <h2>✅ User {user_id} - {cluster_info['name']}</h2>
+            </div>
+            """, unsafe_allow_html=True)
 
             # ==================== OVERVIEW SECTION ====================
-            st.markdown("---")
-            st.markdown("## 📊 User Overview")
-
-            profile_info = profile_data["profile"]
-            cluster_info = profile_data["cluster"]
-            cluster_id = cluster_info['id']
+            st.markdown("### 📊 User Overview")
 
             # Key metrics row
-            col1, col2, col3, col4, col5 = st.columns(5)
+            col1, col2, col3, col4 = st.columns(4)
 
             with col1:
                 st.metric("User ID", user_id)
 
             with col2:
-                anciennete = profile_info.get('anciennete', 0)
-                st.metric("Experience", f"{anciennete} years")
+                anciennete = user_profile.get('anciennete')
+                if anciennete:
+                    st.metric("Experience", f"{anciennete} years")
+                else:
+                    st.metric("Experience", "Not specified")
 
             with col3:
                 cluster_name = cluster_info.get('name', 'Unknown')
                 st.metric("Cluster", f"{cluster_id}: {cluster_name}")
 
             with col4:
-                degre = profile_info.get('degre', 0)
+                degre = user_profile.get('degre')
                 degre_labels = {1: "Primary", 2: "Secondary", 3: "Trainer"}
-                st.metric("Level", degre_labels.get(degre, "Unknown"))
-
-            with col5:
-                academie = profile_info.get('academie', 'N/A')
-                st.metric("Academy", academie if academie else "N/A")
+                if degre:
+                    st.metric("Level", degre_labels.get(degre, "Unknown"))
+                else:
+                    st.metric("Level", "Not specified")
 
             # ==================== CLUSTER ANALYSIS ====================
             st.markdown("---")
@@ -78,20 +127,35 @@ if analyze_btn:
 
             with col1:
                 st.markdown("### Cluster Profile")
-                if str(cluster_id) in clusters:
-                    cluster_details = clusters[str(cluster_id)]
 
-                    st.markdown(f"**Name:** {cluster_details['nom']}")
-                    st.markdown(f"**Size:** {cluster_details['taille']}")
-                    st.markdown(f"**Main Level:** {cluster_details['niveau_principal']}")
+                cluster_desc = cluster_info["description"]
 
-                    st.markdown("#### Behavioral Characteristics")
-                    st.write(f"**Activity:** {cluster_details['activite_generale']}")
-                    st.write(f"**Email Engagement:** {cluster_details['engagement_email']}")
-                    st.write(f"**Content Usage:** {cluster_details['usage_contenu']}")
-                    st.write(f"**Theme Diversity:** {cluster_details['diversite_thematique']}")
-                    st.write(f"**Recent Activity:** {cluster_details['activite_recente']}")
-                    st.write(f"**Consistency:** {cluster_details['consistance_annuelle']}")
+                # Use consistent cluster color
+                st.markdown(f"""
+                <div style="background-color: {cluster_colors[cluster_id]}; color: white; padding: 0.5rem; border-radius: 5px; margin-bottom: 1rem;">
+                    <h4 style="margin: 0;">Cluster {cluster_id}: {cluster_name}</h4>
+                </div>
+                """, unsafe_allow_html=True)
+
+                st.markdown(f"**Size:** {clusters[str(cluster_id)]['count']:,} users")
+                st.markdown(f"**Main Level:** {cluster_desc['niveau_principal']}")
+                st.markdown(f"**Average Experience:** {cluster_desc['anciennete_moyenne']}")
+
+                st.markdown("#### Behavioral Characteristics")
+                st.markdown(f"""
+                <div class="characteristic">
+                    <strong>Activity Level:</strong> {cluster_desc['activite_generale']}
+                </div>
+                <div class="characteristic">
+                    <strong>Email Engagement:</strong> {cluster_desc['engagement_email']}
+                </div>
+                <div class="characteristic">
+                    <strong>Content Usage:</strong> {cluster_desc['usage_contenu']}
+                </div>
+                <div class="characteristic">
+                    <strong>Theme Diversity:</strong> {cluster_desc['diversite_thematique']}
+                </div>
+                """, unsafe_allow_html=True)
 
             with col2:
                 st.markdown("### User Position in All Clusters")
@@ -102,21 +166,19 @@ if analyze_btn:
                     cluster_counts = []
                     colors = []
 
-                    cluster_colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57']
-
                     for cid, cluster_info_detail in clusters.items():
-                        cluster_names.append(cluster_info_detail['nom'])  # Use real names
+                        cid_int = int(cid)  # Convert to integer for color indexing
+                        cluster_names.append(cluster_info_detail['name'])
 
-                        # Extract count from size string (e.g., "74,099 utilisateurs (37.3%)")
-                        size_str = cluster_info_detail['taille']
-                        count = int(size_str.split()[0].replace(',', ''))
+                        # Extract count
+                        count = cluster_info_detail['count']
                         cluster_counts.append(count)
 
-                        # Highlight user's cluster with gold color
-                        if int(cid) == cluster_id:
+                        # Highlight user's cluster with gold color, use consistent colors for others
+                        if cid_int == cluster_id:
                             colors.append('#FFD700')  # Gold for user's cluster
                         else:
-                            colors.append(cluster_colors[int(cid)])
+                            colors.append(cluster_colors[cid_int])
 
                     # Create bar chart
                     fig_cluster = go.Figure(data=[
@@ -141,11 +203,11 @@ if analyze_btn:
 
                     # Add annotations for percentages
                     for i, (cid, cluster_info_detail) in enumerate(clusters.items()):
-                        percentage = cluster_info_detail['taille'].split('(')[1].replace('%)', '')
+                        percentage = cluster_info_detail['percentage']
                         fig_cluster.add_annotation(
-                            x=cluster_info_detail['nom'],
+                            x=cluster_info_detail['name'],
                             y=cluster_counts[i],
-                            text=f"{percentage}%",
+                            text=f"{percentage:.1f}%",
                             showarrow=False,
                             yshift=10,
                             font=dict(size=10, color="gray")
@@ -158,13 +220,14 @@ if analyze_btn:
 
                     comparison_data = []
                     for cid, cluster_detail in clusters.items():
-                        is_user_cluster = int(cid) == cluster_id
+                        cid_int = int(cid)
+                        is_user_cluster = cid_int == cluster_id
                         comparison_data.append({
-                            "Cluster": f"{'👤 ' if is_user_cluster else ''}{cluster_detail['nom']}",
-                            "Size": cluster_detail['taille'],
-                            "Activity": cluster_detail['activite_generale'],
-                            "Content Usage": cluster_detail['usage_contenu'],
-                            "Main Level": cluster_detail['niveau_principal']
+                            "Cluster": f"{'👤 ' if is_user_cluster else ''}{cluster_detail['name']}",
+                            "Size": f"{cluster_detail['count']:,} ({cluster_detail['percentage']:.1f}%)",
+                            "Activity": cluster_detail['description']['activite_generale'],
+                            "Content Usage": cluster_detail['description']['usage_contenu'],
+                            "Main Level": cluster_detail['description']['niveau_principal'].split('(')[0]
                         })
 
                     df_comparison = pd.DataFrame(comparison_data)
@@ -183,8 +246,8 @@ if analyze_btn:
                 st.markdown("### Teaching Information")
 
                 # Teaching levels
-                niveaux = profile_info.get('niveaux_enseignes', [])
-                if niveaux:
+                niveaux = user_profile.get('niveaux_enseignes', [])
+                if niveaux and len(niveaux) > 0:
                     if isinstance(niveaux, list):
                         st.write(f"**Teaching Levels:** {', '.join(niveaux).title()}")
                     else:
@@ -192,101 +255,79 @@ if analyze_btn:
                 else:
                     st.write("**Teaching Levels:** Not specified")
 
-                # Discipline (for secondary only)
-                discipline = profile_info.get('discipline')
-                if discipline:
-                    st.write(f"**Discipline:** {discipline}")
-
-                # Institution type
-                type_etab = profile_info.get('type_etab')
-                if type_etab:
-                    st.write(f"**Institution Type:** {type_etab}")
+                # Degree level
+                if degre:
+                    st.write(f"**Degree Level:** {degre_labels.get(degre, 'Unknown')}")
+                else:
+                    st.write("**Degree Level:** Not specified")
 
             with col2:
                 st.markdown("### Geographic Information")
 
-                code_postal = profile_info.get('code_postal')
-                if code_postal:
-                    st.write(f"**Postal Code:** {code_postal}")
-
-                departement = profile_info.get('departement')
-                if departement:
-                    st.write(f"**Department:** {departement}")
-
+                academie = user_profile.get('academie')
                 st.write(f"**Academy:** {academie}")
 
-            # ==================== ENGAGEMENT METRICS ====================
+            # ==================== RECOMMENDED CONTENT ====================
             st.markdown("---")
-            st.markdown("## 📈 Engagement Analytics")
+            st.markdown("## 📚 Personalized Recommendations")
 
-            # Note: These metrics would come from the API in a real scenario
-            # For now, we'll create placeholder visualizations based on typical patterns
+            # Display recommendations from the API
+            if recommendations and "recommendations" in recommendations:
+                recommended_contents = recommendations["recommendations"]
+                if recommended_contents:
+                    # Show strategy info if available
+                    reasoning = recommendations.get("reasoning", {})
+                    if reasoning:
+                        st.info(f"**Strategy:** {reasoning.get('strategy', 'N/A')}")
 
-            col1, col2 = st.columns(2)
+                    # Tabs for different views
+                    tab1, tab2 = st.tabs(["📄 List View", "🔍 Detailed View"])
 
-            with col1:
-                st.markdown("### Activity Timeline (Last 12 Months)")
+                    with tab1:
+                        # Create a dataframe for the list view
+                        content_list = []
+                        for i, content in enumerate(recommended_contents, 1):
+                            priority = "✅" if content.get('is_priority_challenge') else ""
 
-                # Simulated monthly activity data (would come from API)
-                months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                            content_list.append({
+                                "#": i,
+                                "Title": content.get('title', 'Untitled'),
+                                "Type": content.get('type', 'N/A'),
+                                "Priority": priority,
+                                "Reason": content.get('reason', 'N/A')
+                            })
 
-                # Generate sample data based on cluster behavior
-                if cluster_id == 0:  # Peu Engagés Primaire
-                    activity = [2, 1, 0, 1, 3, 2, 0, 1, 2, 1, 0, 1]
-                elif cluster_id == 1:  # Actifs Polyvalents
-                    activity = [8, 12, 10, 15, 18, 14, 16, 20, 17, 19, 13, 11]
-                elif cluster_id == 2:  # Super Users
-                    activity = [25, 30, 28, 35, 40, 38, 42, 45, 38, 41, 36, 33]
-                elif cluster_id == 3:  # Email-Heavy
-                    activity = [15, 18, 12, 20, 22, 19, 17, 24, 21, 18, 16, 14]
-                else:  # Peu Engagés Secondaire
-                    activity = [3, 2, 1, 2, 4, 3, 1, 2, 3, 2, 1, 2]
+                        df = pd.DataFrame(content_list)
+                        st.dataframe(df, use_container_width=True, hide_index=True)
 
-                fig_timeline = go.Figure()
-                fig_timeline.add_trace(go.Scatter(
-                    x=months,
-                    y=activity,
-                    mode='lines+markers',
-                    name='Monthly Activity',
-                    line=dict(color='#45B7D1', width=3),
-                    marker=dict(size=8)
-                ))
+                    with tab2:
+                        # Expandable detailed view
+                        for i, content in enumerate(recommended_contents, 1):
+                            with st.expander(f"{i}. {content.get('title', 'Untitled')} ({content.get('type', 'N/A')})"):
+                                # Content details
+                                col1, col2 = st.columns([2, 1])
 
-                fig_timeline.update_layout(
-                    title="Monthly Interactions",
-                    xaxis_title="Month",
-                    yaxis_title="Interactions",
-                    height=300
-                )
+                                with col1:
+                                    st.write(f"**Type:** {content.get('type', 'N/A')}")
+                                    st.write(f"**Source:** {content.get('source', 'N/A')}")
 
-                st.plotly_chart(fig_timeline, use_container_width=True)
+                                    if content.get('reason'):
+                                        st.write(f"**Reason:** {content['reason']}")
 
-            with col2:
-                st.markdown("### Content Type Preferences")
+                                    if content.get('url'):
+                                        st.markdown(f"[View on ÊtrePROF]({content['url']})")
 
-                # Simulated content preferences (would come from API)
-                content_types = ['Articles', 'Tool Sheets', 'Guides', 'Activities', 'Workshops']
+                                with col2:
+                                    # Content characteristics
+                                    if content.get('is_priority_challenge'):
+                                        st.success(f"✅ Priority Challenge: {content.get('priority_challenge', 'Unknown')}")
 
-                if cluster_id == 0:  # Peu Engagés Primaire
-                    preferences = [5, 2, 1, 3, 1]
-                elif cluster_id == 1:  # Actifs Polyvalents
-                    preferences = [20, 15, 12, 18, 10]
-                elif cluster_id == 2:  # Super Users
-                    preferences = [35, 28, 25, 30, 20]
-                elif cluster_id == 3:  # Email-Heavy
-                    preferences = [8, 5, 3, 4, 2]
-                else:  # Peu Engagés Secondaire
-                    preferences = [4, 3, 2, 2, 1]
-
-                fig_content = px.pie(
-                    values=preferences,
-                    names=content_types,
-                    title="Content Type Distribution"
-                )
-
-                fig_content.update_layout(height=300)
-                st.plotly_chart(fig_content, use_container_width=True)
+                                    if content.get('id'):
+                                        st.caption(f"Content ID: {content['id']}")
+                else:
+                    st.warning("No recommendations available for this user.")
+            else:
+                st.warning("No recommendations data available.")
 
             # ==================== BEHAVIORAL INSIGHTS ====================
             st.markdown("---")
@@ -323,17 +364,15 @@ if analyze_btn:
             with col2:
                 st.markdown("### Engagement Score")
 
-                # Calculate engagement score
-                if cluster_id == 0:
-                    engagement = 2.3
-                elif cluster_id == 1:
-                    engagement = 6.8
-                elif cluster_id == 2:
-                    engagement = 9.2
-                elif cluster_id == 3:
-                    engagement = 5.1
-                else:
-                    engagement = 2.7
+                # Calculate engagement score based on cluster
+                engagement_scores = {
+                    0: 2.3,
+                    1: 6.8,
+                    2: 9.2,
+                    3: 5.1,
+                    4: 2.7
+                }
+                engagement = engagement_scores.get(cluster_id, 5.0)
 
                 st.metric("Overall Engagement", f"{engagement}/10")
 
@@ -343,102 +382,19 @@ if analyze_btn:
             with col3:
                 st.markdown("### Recommendations Priority")
 
-                if cluster_id in [0, 4]:
-                    priority = "Re-engagement"
-                    priority_color = "🎯"
-                elif cluster_id == 1:
-                    priority = "Diversification"
-                    priority_color = "🌟"
-                elif cluster_id == 2:
-                    priority = "Expert Content"
-                    priority_color = "🚀"
-                else:
-                    priority = "Platform Migration"
-                    priority_color = "📱"
+                strategy_map = {
+                    0: ("Re-engagement", "🎯"),
+                    1: ("Diversification", "🌟"),
+                    2: ("Expert Content", "🚀"),
+                    3: ("Platform Migration", "📱"),
+                    4: ("Re-engagement", "🎯")
+                }
+
+                priority, priority_color = strategy_map.get(cluster_id, ("General Content", "📚"))
 
                 st.metric("Strategy Focus", f"{priority_color} {priority}")
 
-            # ==================== RECOMMENDATIONS ====================
-            st.markdown("---")
-            st.markdown("## 🎯 Team Recommendations")
 
-            recommendations_result = call_api(f"/recommend/{cluster_id}")
-
-            if recommendations_result and recommendations_result.get("success"):
-                rec_data = recommendations_result["recommendations"]
-
-                col1, col2 = st.columns([2, 1])
-
-                with col1:
-                    st.markdown("### Strategic Approach")
-
-                    cluster_desc = rec_data.get("cluster_description", {})
-                    if cluster_desc:
-                        st.info(f"**Strategy:** {cluster_desc.get('strategy', 'N/A')}")
-
-                    # Show recommended contents
-                    if "recommended_contents" in rec_data and rec_data["recommended_contents"]:
-                        st.markdown("#### Specific Content Recommendations")
-
-                        for i, content in enumerate(rec_data["recommended_contents"], 1):
-                            with st.expander(f"{i}. {content.get('title', 'Untitled')} ({content.get('type', 'N/A')})"):
-                                if content.get('reason'):
-                                    st.write(f"**Rationale:** {content['reason']}")
-                                if content.get('is_priority_challenge'):
-                                    st.success("✅ Priority Challenge Content")
-                                if content.get('topic_match'):
-                                    st.info("🎯 Topic Match")
-
-                with col2:
-                    st.markdown("### Action Items")
-
-                    # Specific actions based on cluster
-                    if cluster_id in [0, 4]:  # Low engagement
-                        st.markdown("""
-                        **Immediate Actions:**
-                        - Send re-engagement email
-                        - Offer simplified content
-                        - Provide onboarding support
-                        """)
-                    elif cluster_id == 1:  # Balanced
-                        st.markdown("""
-                        **Growth Actions:**
-                        - Introduce advanced features
-                        - Promote community features
-                        - Suggest premium content
-                        """)
-                    elif cluster_id == 2:  # Super users
-                        st.markdown("""
-                        **Retention Actions:**
-                        - Invite to beta programs
-                        - Offer expert content
-                        - Consider ambassador program
-                        """)
-                    else:  # Email-heavy
-                        st.markdown("""
-                        **Migration Actions:**
-                        - Optimize email CTR
-                        - Gradual platform migration
-                        - Mobile app promotion
-                        """)
-
-            # ==================== EXPORT OPTIONS ====================
-            st.markdown("---")
-            st.markdown("## 📊 Export & Actions")
-
-            col1, col2, col3 = st.columns(3)
-
-            with col1:
-                if st.button("📧 Send Re-engagement Email", key="email_btn"):
-                    st.success("✅ Re-engagement email queued for user")
-
-            with col2:
-                if st.button("📊 Export User Report", key="export_btn"):
-                    st.success("✅ Detailed report exported to CSV")
-
-            with col3:
-                if st.button("🎯 Add to Campaign", key="campaign_btn"):
-                    st.success("✅ User added to targeted campaign")
 
         elif profile_result and not profile_result.get("success"):
             st.error(f"❌ {profile_result.get('error', 'User not found')}")
@@ -450,7 +406,7 @@ if analyze_btn:
             - User has no interaction history
             - API synchronization delay
 
-            **Try with known user IDs:** 12345, 67890, 45678, 89012
+            **Try with known user IDs:** 6000, 12345, 45678, 89012
             """)
 
         else:
@@ -476,10 +432,23 @@ with st.expander("🔧 Team Analytics Guide", expanded=False):
     **Privacy Note:** This detailed view is for internal team use only.
     """)
 
+st.divider()
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("🎯 Back to Dashboard"):
+        st.switch_page("pages/2_TEAM_Dashboard.py")
+with col2:
+    api_status = call_api("/")
+    if api_status:
+        st.success(f"✅ API connected: {api_status.get('status', 'running')}")
+    else:
+        st.error("❌ Cannot connect to API")
+        st.stop()
 
-api_status = call_api("/")
-if api_status:
-    st.success(f"API connected: {api_status.get('status', 'running')}")
-else:
-    st.error("Cannot connect to API")
-    st.stop()
+# Footer
+st.divider()
+st.markdown("""
+<div style='text-align: center; color: #666;'>
+    ÊtrePROF x Le Wagon - batch #1945
+</div>
+""", unsafe_allow_html=True)

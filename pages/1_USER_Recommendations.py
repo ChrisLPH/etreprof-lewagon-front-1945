@@ -3,24 +3,47 @@ from utils import call_api
 
 # Configuration de la page
 st.set_page_config(
-    page_title="ÊtrePROF - User Experience",
+    page_title="ÊtrePROF - User Recommendations",
     page_icon="👤",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# API connection test
-api_status = call_api("/")
-if api_status:
-    st.success(f"API connected: {api_status.get('status', 'running')}")
-else:
-    st.error("Cannot connect to API")
-    st.stop()
+# Custom CSS for consistent styling
+st.markdown("""
+<style>
+    .stApp {
+        background-color: #f4f8fe;
+    }
+    .profile-header {
+        background: linear-gradient(90deg, #1f4e79 0%, #2d5aa0 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1.5rem;
+    }
+    .content-divider {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #e1e4e8;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-st.title("👤 Get Your Personalized Recommendations")
+# Define cluster colors for consistency
+cluster_colors = ['#5f2ec8', '#ffc373', '#45B7D1', '#96CEB4', '#FF6B6B']
+
+# Main header
+st.markdown("# 👤 Get Your Personalized Recommendations")
 st.markdown("Enter your user ID to discover content tailored to your teaching profile.")
 
-# User input
+# API connection check
+api_status = call_api("/")
+if not api_status:
+    st.error("❌ Cannot connect to API")
+    st.stop()
+
+# User input section
 col1, col2 = st.columns([2, 1])
 
 with col1:
@@ -55,73 +78,116 @@ with col2:
 # Get recommendations button
 if st.button("🎯 Get My Recommendations", type="primary", disabled=user_id is None):
     if user_id:
-        with st.spinner(f"Loading recommendations for user {user_id}..."):
-
-            # Get user profile to find cluster
+        with st.spinner(f"Loading your personalized recommendations..."):
+            # Get user profile directly - it now includes recommendations
             profile_result = call_api(f"/user/{user_id}/profile")
 
             if profile_result and profile_result.get("success"):
                 profile_data = profile_result["data"]
-                cluster_id = profile_data["cluster"]["id"]
-                cluster_name = profile_data["cluster"]["name"]
 
-                # Small delay to ensure data is properly loaded
-                import time
-                time.sleep(0.5)
+                # Extract user information and recommendations
+                cluster_info = profile_data["cluster"]
+                cluster_id = int(cluster_info['id'])
+                recommendations = profile_data["recommendations"]
 
-        # Second spinner for recommendations
-        with st.spinner("Loading your personalized recommendations..."):
-            # Get recommendations for user's cluster
-            recommendations_result = call_api(f"/recommend/{cluster_id}")
+                # Display header
+                st.markdown(f"""
+                <div class="profile-header">
+                    <h3>✅ Your Personalized Content Recommendations</h3>
+                </div>
+                """, unsafe_allow_html=True)
 
-            if recommendations_result and recommendations_result.get("success"):
-                rec_data = recommendations_result["recommendations"]
-
-                st.success(f"✅ Recommendations for User {user_id}")
-
-                st.markdown(f"## 📚 Content Recommended for You")
-                st.info(f"Based on your profile: **{cluster_name}**")
-
-                # Show recommended contents
-                recommended_contents = rec_data.get("recommended_contents", [])
+                # Display recommended contents
+                recommended_contents = recommendations.get("recommendations", [])
 
                 if recommended_contents:
-                    # Filter out placeholder content
+                    # Check if we have actual content
                     real_contents = [c for c in recommended_contents if c.get('id') is not None and c.get('title') != 'Untitled']
 
                     if real_contents:
-                        for i, content in enumerate(real_contents, 1):
-                            with st.container():
+                        # Create tabs for different content types
+                        all_tab, articles_tab, tools_tab = st.tabs(["All Content", "Articles", "Tool Sheets"])
+
+                        with all_tab:
+                            for i, content in enumerate(real_contents, 1):
                                 col1, col2 = st.columns([3, 1])
 
                                 with col1:
                                     st.markdown(f"### {i}. {content.get('title', 'No title')}")
-                                    st.write(f"**Type:** {content.get('type', 'N/A').title()}")
+                                    st.write(f"**Type:** {content.get('type', 'N/A').replace('_', ' ').title()}")
 
                                     if content.get('reason'):
-                                        st.write(f"💡 {content['reason']}")
+                                        st.write(f"💡 **Why this content:** {content['reason']}")
 
                                     if content.get('url') and content['url'] != '':
                                         st.markdown(f"[📖 Read this content]({content['url']})")
 
                                 with col2:
                                     if content.get('is_priority_challenge'):
-                                        st.success("✅ Professional Development")
-                                    if content.get('topic_match'):
-                                        st.info("🎯 Popular Choice")
+                                        st.success(f"✅ Priority Challenge: {content.get('priority_challenge', '')}")
 
-                            st.markdown("---")
+                                st.markdown("<div class='content-divider'></div>", unsafe_allow_html=True)
+
+                        with articles_tab:
+                            articles = [c for c in real_contents if c.get('type') == 'article']
+                            if articles:
+                                for i, content in enumerate(articles, 1):
+                                    st.markdown(f"### {i}. {content.get('title', 'No title')}")
+
+                                    if content.get('reason'):
+                                        st.write(f"💡 {content['reason']}")
+
+                                    if content.get('url') and content['url'] != '':
+                                        st.markdown(f"[📖 Read this article]({content['url']})")
+
+                                    if content.get('is_priority_challenge'):
+                                        st.success(f"✅ Priority Challenge: {content.get('priority_challenge', '')}")
+
+                                    st.markdown("<div class='content-divider'></div>", unsafe_allow_html=True)
+                            else:
+                                st.info("No articles in your recommendations. Check the 'All Content' tab.")
+
+                        with tools_tab:
+                            tools = [c for c in real_contents if c.get('type') in ['fiche_outils', 'guide_pratique']]
+                            if tools:
+                                for i, content in enumerate(tools, 1):
+                                    st.markdown(f"### {i}. {content.get('title', 'No title')}")
+
+                                    if content.get('reason'):
+                                        st.write(f"💡 {content['reason']}")
+
+                                    if content.get('url') and content['url'] != '':
+                                        st.markdown(f"[📥 Download this resource]({content['url']})")
+
+                                    if content.get('is_priority_challenge'):
+                                        st.success(f"✅ Priority Challenge: {content.get('priority_challenge', '')}")
+
+                                    st.markdown("<div class='content-divider'></div>", unsafe_allow_html=True)
+                            else:
+                                st.info("No tool sheets in your recommendations. Check the 'All Content' tab.")
                     else:
                         st.warning("No specific content recommendations available at the moment.")
                 else:
                     st.warning("No recommendations available for your profile.")
-
             else:
-                st.error("Unable to load recommendations. Please try again.")
+                error_message = profile_result.get('error', 'Unable to load your profile') if profile_result else 'Unable to connect to the server'
+                st.error(f"❌ {error_message}")
 
-
+                st.info("""
+                **Possible solutions:**
+                - Check your user ID and try again
+                - Try one of our example users
+                - Contact support if the problem persists
+                """)
 
 # Navigation
-st.markdown("---")
+st.divider()
 if st.button("🏠 Back to Home"):
-    st.switch_page("app.py")
+    st.switch_page("Welcome.py")
+
+# Footer
+st.markdown("""
+<div style='text-align: center; color: #666;'>
+    ÊtrePROF x Le Wagon - #batch1945
+</div>
+""", unsafe_allow_html=True)

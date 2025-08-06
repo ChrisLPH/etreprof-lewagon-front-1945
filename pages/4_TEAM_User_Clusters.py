@@ -289,13 +289,23 @@ if clusters_data and clusters_data.get("success"):
 
 
 
+st.divider()
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("🎯 Back to Dashboard"):
+        st.switch_page("pages/2_TEAM_Dashboard.py")
+with col2:
+    api_status = call_api("/")
+    if api_status:
+        st.success(f"✅ API connected: {api_status.get('status', 'running')}")
+    else:
+        st.error("❌ Cannot connect to API")
+        st.stop()
+
 # Footer
-st.markdown("---")
+st.divider()
 st.markdown("""
 <div style='text-align: center; color: #666;'>
-    ÊtrePROF x Le Wagon - #batch1945
+    ÊtrePROF x Le Wagon - batch #1945
 </div>
 """, unsafe_allow_html=True)
-
-# Display API status at the bottom
-st.success(f"✅ API connected: {api_status.get('status', 'running')}")
