@@ -2,6 +2,7 @@ import streamlit as st
 from utils import call_api
 import plotly.express as px
 import plotly.graph_objects as go
+import pandas as pd
 
 # Page configuration
 st.set_page_config(
@@ -85,12 +86,29 @@ if clusters_data and clusters_data.get("success"):
     # Distribution chart
     st.markdown("### 🍰 User Distribution")
 
+    # Créer une liste des clusters dans l'ordre de leurs IDs
+    ordered_clusters = []
+    for cid in sorted([int(c) for c in clusters.keys()]):
+        cluster_info = clusters[str(cid)]
+        ordered_clusters.append({
+            'name': cluster_info['name'],
+            'count': cluster_info['count'],
+            'color': cluster_colors[cid],
+            'id': cid
+        })
+
+    # Convertir en DataFrame
+    df_clusters = pd.DataFrame(ordered_clusters)
+
+    # Maintenant utiliser ce DataFrame pour le graphique
     fig_pie = px.pie(
-        values=cluster_counts,
-        names=cluster_names,
-        color_discrete_sequence=cluster_colors,
-        hole=0.4,  # Donut chart for a more modern look
-        labels={'label': 'Cluster', 'value': 'Number of users'}
+        df_clusters,
+        values='count',
+        names='name',
+        color='name',  # Utiliser le nom comme variable de couleur
+        color_discrete_map={row['name']: row['color'] for _, row in df_clusters.iterrows()},  # Mapping explicite
+        hole=0.4,
+        labels={'name': 'Cluster', 'count': 'Number of users'}
     )
 
     # Legend to the side as requested

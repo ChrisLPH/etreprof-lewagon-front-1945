@@ -62,7 +62,7 @@ with col1:
     user_id = st.number_input(
         "User ID to analyze:",
         min_value=1,
-        value=6000,
+        value=93697,
         step=1,
         help="Enter the user ID for detailed behavioral analysis"
     )
