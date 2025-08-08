@@ -94,10 +94,10 @@ with st.expander("**📖 About ÊtrePROF Project**", expanded=False):
     with col1:
         st.markdown("""
         ### 🏫 What is ÊtrePROF?
-        ÊtrePROF is a digital professional development platform that supports teachers in their profession,
+        ÊtrePROF is a digital professional development platform that empowers teachers,
         provided by Ecolhuma, a French non-profit organization.
 
-        **Our mission**: Support teachers and school leaders so they can give all students the best opportunities.
+        **Our mission**: Support teachers and school leaders so they can give all students the best opportunities and build a school that is fairer and more equal.
 
         ### 🚀 From Library to AI Companion
         - **Today**: Content Library - Teachers search when they need
